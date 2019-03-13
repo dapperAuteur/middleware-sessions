@@ -1,20 +1,31 @@
 const express = require('express')
-const axios = require('axios')
+const session = require('express-session')
 
 const app = express()
 
 app.use(express.json())
-
-app.get('/data', (req, res) => {
-  res.json({
-    data: [1, 3, 3, 7],
-  })
+app.use(session({
+  secret: 'something',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 10000 },
+}))
+app.use((req, res, next) => {
+  if (!req.session.counter) {
+    req.session.counter = 1
+  } else {
+    req.session.counter++
+  }
+  next()
 })
 
-app.get('/data2', (req, res) => {
-  res.json({
-    data: [1, 3, 3, 8],
-  })
+app.get('/logout', (req, res) => {
+  req.session.destroy()
+  res.send('Session destroyed')
+})
+
+app.get('/', (req, res) => {
+  res.send('You have visited ' + req.session.counter + ' times. Your session ID is ' + req.session.id)
 })
 
 const port = 3005
